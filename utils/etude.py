@@ -9,6 +9,7 @@ class EtudeFiches:
         self._dir_proj = dir_proj
         self._existing_out_file = existing_out_file
         self._data_path = self._dir_proj + '/Data'
+        self._l_project_without_fiche = []
         
         if (self._existing_out_file == None):
             self._existing_out_file = self._dir_proj + '/Suivi/suivi.csv'
@@ -82,3 +83,35 @@ class EtudeFiches:
             for idx, item in enumerate(l_titre):
                 l_T = [l_T1[idx] , l_T2[idx], l_T3[idx], l_T4[idx]]
                 self._list_project.append(Project(l_titre[idx], l_T))
+
+    def match_fiche_data(self):
+        b_match = False
+        if(self._list_project != None 
+                and self._all_tri_fiches != None):
+            for idx_p, item_p in enumerate(self._list_project):
+                b_match = False
+                #print str(idx_p)
+                #print self._list_project[idx_p]._name_project
+                for idx_f, item_f in enumerate(self._all_tri_fiches):
+                    #print self._all_tri_fiches[idx_f]
+                    #if(self._list_project[idx_p]._name_project.find(
+                    #    self._all_tri_fiches[idx_f]) != -1):
+                    if(self._all_tri_fiches[idx_f].find(
+                        self._list_project[idx_p]._name_project) != -1):
+                        self._list_project[idx_p].add_fiche(self._all_tri_fiches[idx_f])
+                        b_match = True
+                        break
+                if(b_match == False):
+                    self._l_project_without_fiche.append(self._list_project[idx_p])
+
+    def show_projects_fiches_missing(self):
+        for elt in self._l_project_without_fiche:
+            print elt._name_project
+    
+    def show_all_project_data(self):
+        for idx, item in enumerate(self._list_project):
+            s_projet = "Nom du projet : " + self._list_project[idx]._name_project
+            s_fiche = " Nom fiches : "
+            for idx_l, item_l in enumerate(self._list_project[idx].l_fiches):
+                s_fiche = s_fiche + self._list_project[idx].l_fiches[idx_l]
+            print s_projet + s_fiche
