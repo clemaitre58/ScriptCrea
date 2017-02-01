@@ -2,7 +2,7 @@ import csv
 import os
 import xlrd
 from utils.project import *
-
+from utils.str import *
 class EtudeFiches:
     def __init__(self, dir_proj, existing_out_file = None):
         self._list_project = []
@@ -140,5 +140,16 @@ class EtudeFiches:
             
             for idx, item in enumerate(l_titre):
                 l_T_s = [l_T1_s[idx] , l_T2_s[idx], l_T3_s[idx]]
-                self._list_project.append(Project(l_titre[idx], None, l_T_s))
+                self._list_project_csv.append(Project(l_titre[idx], None, l_T_s))
+        # all project xls
+        for idx_p, item_p in enumerate(self._list_project):
+            ratio_maxi = 0
+            for idx_csv, item_csv in enumerate(self._list_project_csv):
+                    ratio = similarity(self._list_project[idx_p]._name_project, 
+                            self._list_project_csv[idx_csv]._name_project)
+                    if (ratio > ratio_maxi):
+                        idx_ratio_maxi = idx_csv
+                        ratio_maxi = ratio
+            self._list_project[idx_p]._status = self._list_project_csv[idx_ratio_maxi]._status
+
 
