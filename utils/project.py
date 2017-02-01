@@ -1,12 +1,14 @@
 class Project :
-    def __init__(self, name_project, l_heures = None) :
+    def __init__(self, name_project, l_heures = None, l_status = None) :
         self._name_project = name_project
         self._nb_heures = []
-        self.status = []
+        self._status = []
         self._l_fiches = []
 
         if (l_heures != None):
             self._nb_heures = l_heures
+        if (l_status != None):
+            self._status = l_status
 
 #    def add_trimester() :
 

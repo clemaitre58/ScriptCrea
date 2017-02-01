@@ -6,6 +6,7 @@ from utils.project import *
 class EtudeFiches:
     def __init__(self, dir_proj, existing_out_file = None):
         self._list_project = []
+        self._list_project_csv = []
         self._dir_proj = dir_proj
         self._existing_out_file = existing_out_file
         self._data_path = self._dir_proj + '/Data'
@@ -13,7 +14,9 @@ class EtudeFiches:
         
         if (self._existing_out_file == None):
             self._existing_out_file = self._dir_proj + '/Suivi/suivi.csv'
-            self._create_empty_ofile(self._existing_out_file)
+            self._create_empty_ofile(self._existing_out_filer)
+        else :
+            self._import_existing_suivi(self._existing_out_file)
 
 
     # def check_fiche_vs_xls():
@@ -82,7 +85,7 @@ class EtudeFiches:
             
             for idx, item in enumerate(l_titre):
                 l_T = [l_T1[idx] , l_T2[idx], l_T3[idx], l_T4[idx]]
-                self._list_project.append(Project(l_titre[idx], l_T))
+                self._list_project.append(Project(l_titre[idx], l_T, None))
 
     def match_fiche_data(self):
         b_match = False
@@ -90,12 +93,7 @@ class EtudeFiches:
                 and self._all_tri_fiches != None):
             for idx_p, item_p in enumerate(self._list_project):
                 b_match = False
-                #print str(idx_p)
-                #print self._list_project[idx_p]._name_project
                 for idx_f, item_f in enumerate(self._all_tri_fiches):
-                    #print self._all_tri_fiches[idx_f]
-                    #if(self._list_project[idx_p]._name_project.find(
-                    #    self._all_tri_fiches[idx_f]) != -1):
                     if(self._all_tri_fiches[idx_f].find(
                         self._list_project[idx_p]._name_project) != -1):
                         self._list_project[idx_p].add_fiche(self._all_tri_fiches[idx_f])
@@ -115,3 +113,31 @@ class EtudeFiches:
             for idx_l, item_l in enumerate(self._list_project[idx].l_fiches):
                 s_fiche = s_fiche + self._list_project[idx].l_fiches[idx_l]
             print s_projet + s_fiche
+
+    def _import_existing_suivi(self):
+        return None
+
+    def xlxs_to_csv(self, name_xlsx, name_csv):
+        i_book = -1
+        book = xlrd.open_workbook(name_xlsx)
+        print "Ouverture data existant : OK" 
+        names_sheet = book.sheet_names()
+        
+        for idx, item in enumerate(names_sheet):
+            if(names_sheet[idx].find("Data") !=-1):
+                i_book = idx
+        if(i_book_atl == -1 and i_book_ing ==-1):
+            print "Impossible de retourner les onglet dans le fichie excel"
+
+
+       all_data = book.sheet_by_index(i_book)
+       l_titre = all_data.col_values(0)
+       l_T1_s = all_data.col_values(1)
+       l_T2_s = all_data.col_values(2)
+       l_T3_s = all_data.col_values(3)
+    
+            # necessiterat un traitement a l'avenir quand T2, T3, T4 n'existe pas
+            
+            for idx, item in enumerate(l_titre):
+                l_T_s = [l_T1_s[idx] , l_T2_s[idx], l_T3_s[idx]]
+                self._list_project.append(Project(l_titre[idx], None, l_T_s))
