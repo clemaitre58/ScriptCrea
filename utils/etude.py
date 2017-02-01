@@ -141,3 +141,4 @@ class EtudeFiches:
             for idx, item in enumerate(l_titre):
                 l_T_s = [l_T1_s[idx] , l_T2_s[idx], l_T3_s[idx]]
                 self._list_project.append(Project(l_titre[idx], None, l_T_s))
+
