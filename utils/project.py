@@ -4,6 +4,7 @@ class Project :
         self._nb_heures = []
         self._status = []
         self._l_fiches = []
+        self._l_fiches_rel = []
 
         if (l_heures != None):
             self._nb_heures = l_heures

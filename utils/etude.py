@@ -90,6 +90,7 @@ class EtudeFiches:
             
             for idx, item in enumerate(l_titre):
                 l_T = [l_T1[idx] , l_T2[idx], l_T3[idx], l_T4[idx]]
+                print l_titre[idx] + " " + str(l_T[0]) + " " + str(l_T[1]) + " " +str(l_T[2]) + " " +str(l_T[3])
                 self._list_project.append(Project(l_titre[idx], l_T, None))
 
     def match_fiche_data(self):
@@ -149,10 +150,10 @@ class EtudeFiches:
         for idx_p, item_p in enumerate(self._list_project):
             ratio_maxi = 0
             for idx_csv, item_csv in enumerate(self._list_project_csv):
-                print "Nom projet : " + self._list_project[idx_p]._name_project + " Nom CSV : " + self._list_project_csv[idx_csv]._name_project
+                #print "Nom projet : " + self._list_project[idx_p]._name_project + " Nom CSV : " + self._list_project_csv[idx_csv]._name_project
                 ratio = similarity(self._list_project[idx_p]._name_project, 
                             self._list_project_csv[idx_csv]._name_project)
-                print "ratio : " + str(ratio)
+                #print "ratio : " + str(ratio)
                 if (ratio > ratio_maxi):
                     idx_ratio_maxi = idx_csv
                     ratio_maxi = ratio
@@ -169,45 +170,57 @@ class EtudeFiches:
         for idx, item in enumerate(self._list_project):
             # on teste tous les cas de status
             if len(self._list_project[idx]._status) != 0 :
-                print str(len(self._list_project[idx]._status))
-                print str(T)
+                #print str(len(self._list_project[idx]._status))
+                #print str(T)
                 status = self._list_project[idx]._status[T-1]
-                print status
+                #print status
                 # 1 Non eligible exclu de la veille
                 if status == 1 :
-                    self._list_project[idx]._status.append('1')
+                    self._list_project[idx]._status.append(1)
                 # 2 Non eligible suivi 2 fois par an
                 elif status == 2 :
                     if (T + 1) % 2 ==  0 :
-                        self._liste_a_traiter.append(self._list_project[idx])
+                        if(self._list_project[idx]._nb_heures[T] != 0):
+                            self._liste_a_traiter.append(self._list_project[idx])
                     else:
-                        self._list_project[idx]._status.append('2')
+                        self._list_project[idx]._status.append(1)
                 # 3 Non determine element favable suivi stric
                 elif status == 3:
-                    self._liste_a_traiter.append(self._list_project[idx])
+                    if(self._list_project[idx]._nb_heures[T] != 0):
+                        self._liste_a_traiter.append(self._list_project[idx])
                 # 4 Eligible et va etre ecrit
                 # 5 Rescrit obtenu ou en cours
                 elif status == 5 :
-                    self._liste_a_traiter.append(self._list_project[idx])
+                    if(self._list_project[idx]._nb_heures[T] != 0):
+                        self._liste_a_traiter.append(self._list_project[idx])
                 # 6 Continuite
                 elif status == 6:
                     if (T + 1) == 4:
-                        self._liste_a_traiter.append(self._list_project[idx])
+                        if(self._list_project[idx]._nb_heures[T] != 0):
+                            self._liste_a_traiter.append(self._list_project[idx])
                         self._list_conti.append(self._list_project[idx])
                     else:
-                        self._list_project[idx]._status.append('6')
+                        self._list_project[idx]._status.append(1)
 
                 # 7 Petite Fiche existante
                 if status == 7 :
                     if (T+ 1) == 4 :
-                        self._liste_a_traiter.append(self._list_project[idx])
+                        if(self._list_project[idx]._nb_heures[T] != 0):
+                            self._liste_a_traiter.append(self._list_project[idx])
                         self._list_petite_fiche.append(self._list_project[idx])
                     else :
-                        self._list_project[idx]._status.append('7')
+                        self._list_project[idx]._status.append(7)
+                if status == 0 :
+                    # combien append
+                    val_ap = 4 - len(self._list_project[idx]._status)
+                    for i in range (val_ap):
+                        self._list_project[idx]._status.append(0)
+                    if(self._list_project[idx]._nb_heures[T] != 0):
+                        self._liste_a_traiter.append(self._list_project[idx])
             else:
                 # add 0 for unexisting Tri
                 for i in range (T):
-                    self._list_project[idx]._status.append('0')
+                    self._list_project[idx]._status.append(0)
                 # pas de statut soit nouveau donc a traiter
                 self._list_nouveau.append(self._list_project[idx])
                 self._liste_a_traiter.append(self._list_project[idx])
@@ -241,7 +254,22 @@ class EtudeFiches:
                         print "Valeur saisie : " + str(mode)
                     except :
                         print "Not a number"
-
+                    # on cherche le projet dans tt les fiches
+                    for idx_l, item_l in enumerate(self._list_project):
+                        #print str(idx_l)
+                        ratio = similarity(self._liste_a_traiter[idx]._name_project,
+                                self._list_project[idx_l]._name_project)
+                        #print ratio
+                        if ratio == 1:
+                            # virer la constante ici
+                            if len(self._list_project[idx_l]._status) < 4 :
+                                self._list_project[idx_l]._status.append(mode)
+                            else:
+                                self._list_project[idx_l]._status[3]= mode
+                            print self._list_project[idx_l]._status[3]
+                            #print "Nom a traiter : " + self._liste_a_traiter[idx]._name_project
+                            #print "Nom main liste : " + self._list_project[idx_l]._name_project
+                            break
 
     def export_l_csv(self, name ,l):
         with open(name, 'wb') as fl:
@@ -260,7 +288,7 @@ class EtudeFiches:
                 #fl.write("%s\n" % a_ecrire)
                 if len(l[idx]._nb_heures) != 0:
                     for idx_s, item_s in enumerate(l[idx]._nb_heures):
-                        a_ecrire = a_ecrire + str(l[idx]._nb_heures[idx_s]) + ":"
+                        a_ecrire = a_ecrire + str(l[idx]._nb_heures[idx_s]) + ","
                 else:
                     a_ecrire = a_ecrire + " " + "," + " " + "," + " " + "," + " " + ","
                 fl.write("%s\n" % a_ecrire)
@@ -280,27 +308,38 @@ class EtudeFiches:
             fl.write("<table>")
             fl.write("<tr>")
             for idx, item in enumerate(l):
-                a_ecrire = "<th>" + l[idx]._name_project + "</th>"
+                if l[idx]._name_project != "":
+                    a_ecrire = "<th>" + l[idx]._name_project +" Nb Statut : " + str(len(l[idx]._status)) + "Nb Heures : " + str(len(l[idx]._nb_heures)) + "</th>"
+                else :
+                    a_ecrire = "<th>Pas de nom de projet</th>"
                 if len (l[idx]._l_fiches) != 0:
-                    a_ecrire = a_ecrire + "<th>" + l[idx]._l_fiches[0] + "</th>"
+                    a_ecrire = a_ecrire + "<th>" + l[idx]._l_fiches[0].replace("/home/cedric/Documents/Conseil/Creative", "..") + "</th>"
                 else:
-                    a_ecrire + a_ecrire + "<th> </th>"
-                if (len(l[idx]._status) != 0) and len(l[idx]._nb_heures != 0):
+                    a_ecrire + a_ecrire + "<th>Pas de fichier dispo</th>"
+                if (len(l[idx]._status) != 0 and len(l[idx]._nb_heures) != 0):
                     for idx_s, item_s in enumerate(l[idx]._status):
                         status = l[idx]._status[idx_s]
-                        s_bg = _status_to_color(status)
-                        a_ecrire = a_ecrire + "<td bgcolor=" + s_bg + ">" + str(l[idx]._nb_heures[idx_s]) + "</td>"
+                        s_bg = self._status_to_color(status)
+                        if(idx_s < len(l[idx]._nb_heures)):
+                            a_ecrire = a_ecrire + "<td bgcolor=" + s_bg + ">" + str(l[idx]._nb_heures[idx_s]) + "</td>"
+                        else:
+                            a_ecrire = a_ecrire + "<td bgcolor=" + s_bg + ">" + str(0) + "</td>"
+
                 else:
-                    a_ecrire = a_ecrire + "<th> </th>"+ "<th> </th>"+ "<th> </th>"+ "<th> </th>"                 fl.write("%s\n" % a_ecrire)
+                    a_ecrire = a_ecrire + "<th>0</th>"+ "<th>0</th>"+ "<th>0</th>"+ "<th>0</th>"                 
+                #print a_ecrire
+                #print str(idx)
+                fl.write("%s\n" % a_ecrire)
+                fl.write("</tr>")
                 a_ecrire = ''
             fl.write("</tr>")
             fl.write("</table")
             fl.write("</html>")
             fl.close()
         
-    def _status_to_color(status):
+    def _status_to_color(self, status):
         if(status == 1):
-            return "#000000"
+            return "#A0A0A0"
         elif(status == 2):
             return "#FF0000"
         elif(status == 3):
@@ -315,3 +354,8 @@ class EtudeFiches:
             return "#7f00FF"
         else:
             return "#FFFFFF"
+
+    def clean_l_proj(self, l):
+        for idx, item in enumerate(l):
+            if l[idx]._name_project == "" : #or l[idx]._l_fiches[0] == "" :
+                del l[idx]
