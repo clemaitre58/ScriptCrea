@@ -4,7 +4,7 @@ import xlrd
 import subprocess
 from utils.project import Project
 from utils.str import similarity
-
+import pandas as pd
 
 class EtudeFiches:
     def __init__(self, dir_proj, existing_out_file=None):
@@ -23,7 +23,7 @@ class EtudeFiches:
             self._existing_out_file = self._dir_proj + '/Suivi/suivi.csv'
             self._create_empty_ofile(self._existing_out_file)
         else:
-            self._import_existing_suivi(self._existing_out_file)
+            self._import_existing_suivi()
 
     def _create_empty_ofile(self, name):
         with open(name, 'wb') as fl:
@@ -128,6 +128,12 @@ class EtudeFiches:
             print(s_projet + s_fiche)
 
     def _import_existing_suivi(self):
+        try:
+            df = pd.read_csv(self._existing_out_file)
+        except EnvironmentError:
+            print("impossible d'ouvrir le fichier CSV existant"
+                  + self._existing_out_file)
+
         return None
 
     def xlxs_to_csv(self, name_xlsx, name_csv):
