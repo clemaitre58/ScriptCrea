@@ -8,7 +8,7 @@ from utils.str import similarity
 import pandas as pd
 
 
-class EtudeFiches:
+class  the matching algorithm without problem of thresoldEtudeFiches:
     def __init__(self, dir_proj, existing_out_file=None):
         self._list_project = []
         self._list_project_csv = []
@@ -147,8 +147,10 @@ class EtudeFiches:
             for idx_p, item_p in enumerate(self._list_project_xlsx):
                 b_match = False
                 for idx_f, item_f in enumerate(self._all_tri_fiches):
-                    if(self._all_tri_fiches[idx_f].find(
-                            self._list_project_xlsx[idx_p]._name_project != -1)):
+                    # in order to respect length max of line
+                    arg_temp = self._list_project_xlsx[idx_p]._name_project
+                    tmp_cond = self._all_tri_fiches[idx_f].find(arg_temp)
+                    if tmp_cond != -1:
                         self._list_project_xlsx[idx_p].add_fiche(
                             self._all_tri_fiches[idx_f])
                         b_match = True
@@ -362,14 +364,9 @@ class EtudeFiches:
         for p in self._list_project:
             print(len(p._nb_heures))
 
-        l_close_p = self._add_empty_field_stopped_project(l_close_p,
-                                                          len(self._list_project[0]._nb_heures))
-
-        print(len(self._list_project[0]._nb_heures))
-
-        l_new_proj = self._add_empty_field_new_project(l_new_proj,
-                                                       len(self._list_project[0]._nb_heures))
-        print(len(self._list_project[0]._nb_heures))
+        nb_tri = len(self._list_project[0]._nb_heures)
+        l_close_p = self._add_empty_field_stopped_project(l_close_p, nb_tri)
+        l_new_proj = self._add_empty_field_new_project(l_new_proj, nb_tri)
 
         if(self._Debug is True):
             print("Number project without next in 2017", len(l_close_p),)
@@ -387,10 +384,6 @@ class EtudeFiches:
                 print(proj._name_project)
                 print(proj._nb_heures)
                 print(proj._status)
-
-        # get all fiche name
-        # self._list_all_fiche(
-        #     '/home/cedric/Documents/Conseil/Creative/Data/2017/Fiches/')
 
         return l_continu, l_close_p, l_new_proj
 
@@ -499,9 +492,26 @@ class EtudeFiches:
         return l_no_match, l_match_up
 
     def _pre_proc_fname(self, l):
+        """remove common part of project which are not discriminative in order
+           to apply the the matching algorithm without problem of thresold
+
+        args
+        ----
+
+        l : list of project
+            list of project that need  to clean
+
+        returns
+        -------
+
+        l_res : list of project
+                list of project cleaned project name
+        """
         l_res = []
 
         for p in l:
+
+            # 2016
             if(p._name_project.find("CA_SPROJ_2016_T1_") != -1):
                 s_res = p._name_project.replace("CA_SPROJ_2016_T1_", "")
             elif(p._name_project.find("CA_SPROJ_2016_T2_") != -1):
@@ -521,7 +531,7 @@ class EtudeFiches:
 
             elif(p._name_project.find("2016_T1_Projet_") != -1):
                 s_res = p._name_project.replace("2016_T1_Projet_", "")
-
+            # 2017
             elif(p._name_project.find("CA_SPROJ_2017_T1_") != -1):
                 s_res = p._name_project.replace("CA_SPROJ_2017_T1_", "")
             elif(p._name_project.find("CA_SPROJ_2017_T2_") != -1):
@@ -538,9 +548,28 @@ class EtudeFiches:
                 s_res = p._name_project.replace("CI_SPROJ_2017_T3_", "")
             elif(p._name_project.find("CI_SPROJ_2017_T4_") != -1):
                 s_res = p._name_project.replace("CI_SPROJ_2017_T4_", "")
+            # 2018
+            elif(p._name_project.find("CA_SPROJ_2018_T1_") != -1):
+                s_res = p._name_project.replace("CA_SPROJ_2018_T1_", "")
+            elif(p._name_project.find("CA_SPROJ_2018_T2_") != -1):
+                s_res = p._name_project.replace("CA_SPROJ_2018_T2_", "")
+            elif(p._name_project.find("CA_SPROJ_2018_T3_") != -1):
+                s_res = p._name_project.replace("CA_SPROJ_2018_T3_", "")
+            elif(p._name_project.find("CA_SPROJ_2018_T4_") != -1):
+                s_res = p._name_project.replace("CA_SPROJ_2018_T4_", "")
+            elif(p._name_project.find("CI_SPROJ_2018_T1_") != -1):
+                s_res = p._name_project.replace("CI_SPROJ_2018_T1_", "")
+            elif(p._name_project.find("CI_SPROJ_2018_T2_") != -1):
+                s_res = p._name_project.replace("CI_SPROJ_2018_T2_", "")
+            elif(p._name_project.find("CI_SPROJ_2018_T3_") != -1):
+                s_res = p._name_project.replace("CI_SPROJ_2018_T3_", "")
+            elif(p._name_project.find("CI_SPROJ_2018_T4_") != -1):
+                s_res = p._name_project.replace("CI_SPROJ_2018_T4_", "")
 
             p_res = Project(s_res, p._nb_heures, p._status)
-            print(p_res._name_project, " ----- ", p._name_project)
+
+            if self._Debug is True:
+                print(p_res._name_project, " ----- ", p._name_project)
 
             l_res.append(p_res)
         print("Fin Pre Proc")
@@ -689,8 +718,9 @@ class EtudeFiches:
                     try:
                         mode = int(input('Enter new status'))
                         print("Valeur saisie : " + str(mode))
-                    except:
-                        print("Not a number")
+                    except ValueError:
+                        raise ValueError('Except a number. \
+                                         Got {!r} instead.'.format(mode))
                     # on cherche le projet dans tt les fiches
                     for idx_l, item_l in enumerate(self._list_project):
                         # print str(idx_l)
