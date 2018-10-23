@@ -292,7 +292,7 @@ class EtudeFiches:
 
         return l_new_proj
 
-    def process_from_t(l_project, last_T):
+    def process_from_t(self, l_project, last_T):
         """ process a list of project which contain all data after merging
             the full list contain continuity, closed dans new project.
             the present function, place automatically to the last trimester
@@ -303,7 +303,8 @@ class EtudeFiches:
             ----------
 
                 l_project : list of project
-                            list of project with continuity, closed and new project
+                            list of project with continuity, closed and new
+                            project
 
                 last_T : integer
                          index of last trimester which contain usefull status
@@ -317,16 +318,20 @@ class EtudeFiches:
         # TODO: faire un prétraitement de la dans la liste de status pour voir
         # s'il y a des NA
         l_modif_project = []
-        i_current_status = len(l_project[0]._status)
+        i_current_status = len(l_project[0]._status) - 1
         for p in l_project:
-            if p._status[last_T] == 0:
-                p._status[i_current_status] = p._status[last_T]
+            if p._status[last_T] != 0:
+                if p._status[i_current_status] == -1:
+                    p._status[i_current_status] = 10
+                else:
+                    p._status[i_current_status] = p._status[last_T]
+            p_temp = deepcopy(p)
+            l_modif_project.append(p_temp)
         return l_modif_project
 
     def _process_statut(s_nm1):
-        s_nm1 = s_n
+        s_n = s_nm1
         return s_n
-
 
     def _add_empty_field_stopped_project(self, l_stop_proj, nb):
         l_add = []
@@ -608,7 +613,8 @@ class EtudeFiches:
                 status = self._list_project[idx]._status[T-1]
                 # print status
                 # 1 Non eligible exclu de la veille
-                if status == 1: self._list_project[idx]._status.append(1)
+                if status == 1:
+                    self._list_project[idx]._status.append(1)
                 # 2 Non eligible suivi 2 fois par an
                 elif status == 2:
                     if (T + 1) % 2 == 0:
@@ -702,14 +708,14 @@ class EtudeFiches:
                             break
 
     def export_l_csv(self, name, l):
-        with open(name, 'wb') as fl:
+        with open(name, 'w') as fl:
             print("nombre projet export : " + str(len(l)))
             for idx, item in enumerate(l):
                 a_ecrire = l[idx]._name_project + ","
                 if len(l[idx]._l_fiches) != 0:
                     a_ecrire = a_ecrire + l[idx]._l_fiches[0] + ","
                 else:
-                    a_ecrire + a_ecrire + " "
+                    a_ecrire = a_ecrire + " " + ","
                 if len(l[idx]._status) != 0:
                     for idx_s, item_s in enumerate(l[idx]._status):
                         a_ecrire = a_ecrire + str(l[idx]._status[idx_s]) + ","
@@ -719,12 +725,14 @@ class EtudeFiches:
                 # fl.write("%s\n" % a_ecrire)
                 if len(l[idx]._nb_heures) != 0:
                     for idx_s, item_s in enumerate(l[idx]._nb_heures):
-                        a_ecrire = a_ecrire + str(l[idx]._nb_heures[idx_s])
-                        + ","
+                        a_ecrire = a_ecrire + str(l[idx]._nb_heures[idx_s]) \
+                            + ","
                 else:
                     a_ecrire = a_ecrire + " " + "," + " " + "," + " " + ","
                     + " " + ","
-                fl.write("%s\n" % a_ecrire)
+                if self._Debug is True:
+                    print('Type of string to write : ', type(a_ecrire))
+                fl.write(a_ecrire + '\n')
                 a_ecrire = ''
             fl.close()
 

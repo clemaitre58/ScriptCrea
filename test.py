@@ -11,6 +11,19 @@ l_merge = l_continu + l_close_p + l_new_proj
 
 l_update = EtudeCrea2017.process_from_t(l_merge, 3)
 
+print('Taille liste mise à jour :')
+print(len(l_update))
+
+for p in l_update:
+    print("Nom du projet", p._name_project)
+    print("Statut du projet", p._status)
+
+print('Export 2016-2018 in csv :')
+f_suivi_fiche_2016_csv = \
+    '/home/cedric/Documents/Conseil/Creative/Suivi/suivi_fiche_201617_temp.csv'
+EtudeCrea2017.export_l_csv(f_suivi_fiche_2016_csv, l_update)
+
+
 # EtudeCrea2016._create_new_trimester('T4', '2016')
 # # EtudeCrea2016.print_all_tri_fiches()
 # EtudeCrea2016.match_fiche_data()
