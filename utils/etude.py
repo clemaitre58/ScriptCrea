@@ -8,8 +8,22 @@ from utils.str import similarity
 import pandas as pd
 
 
-class  the matching algorithm without problem of thresoldEtudeFiches:
+class EtudeFiches(object):
+    """ class which allow to process list of project
+
+    This class allow to create a study of project from existing database and
+    data coming from a new datafile which contain at mean a new trimester or
+    namy trimesters data.i
+
+    Attributes
+    ----------
+        _list_project : list of project will contain all the project after
+        the existing database that you give in arguments on the constructor.
+
+    """
     def __init__(self, dir_proj, existing_out_file=None):
+        # TODO: give attribut TMax as argument and place it in attribut of the
+        # class
         self._list_project = []
         self._list_project_csv = []
         self._list_project_xlsx = []
@@ -173,6 +187,7 @@ class  the matching algorithm without problem of thresoldEtudeFiches:
             print(s_projet + s_fiche)
 
     def _import_existing_suivi(self):
+        # TODO: import using the number of Tmax attribut
         df = pd.read_csv(self._existing_out_file)
         l_name_project = []
         l_fiches = []
