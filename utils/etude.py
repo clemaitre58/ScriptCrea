@@ -48,6 +48,7 @@ class EtudeFiches(object):
         self._liste_fiche = []
         self._liste_fiche_full = []
         self._l_new_year = []
+        self._l_proj_file_albert = []
         self._Debug = True
         self._Tmax = Tmax
         if (self._existing_out_file is None):
@@ -231,6 +232,55 @@ class EtudeFiches(object):
 
         return None
 
+    def _import_file_albert(self, fname, l_tri):
+        l_name_project = []
+        s_t = []
+        n_t = []
+        df = pd.read_csv(fname)
+        l_name_project = df['n_projet'].values
+
+        for t in l_tri:
+            s_t.append(0)  # because there es no status in Albert's file
+            n_t.append(df[t._h_name])
+
+        for i in range(len(l_name_project)):
+            t_project = Project(l_name_project[i], n_t[i], s_t[i], None)
+
+            self._l_new_year.append(t_project)
+
+    def import_merge_tri(self, f_name, l_tri):
+        """ import an albert's file and merge existing and extract clased and
+            new
+
+            args
+            ----
+                f_name : string
+                         path of Albert's file
+                l_tri : list of TriHName object
+                        list of Status and trimester that on you to extract
+                        and merge
+
+            returns
+            -------
+
+            l_continu : list of project object
+                        list of project which continu
+            l_close_p : list of project object
+                        list of project which are finished
+            l_new_proj : List of project object
+                         list of pnoject when are new regarding the list of
+                         trimester
+
+        """
+        l_continu = []
+        l_close_p = []
+        l_new_proj = []
+
+        self._import_file_albert(f_name, l_tri)
+        l_continu, l_close_p, l_new_proj = self._merge_database_file()
+
+        return l_continu, l_close_p, l_new_proj
+
     def import_new_year(self, f_year):
         """ Allow to import a new year to the existing member _list_project.
         return 3 lists continuity, stopped, new prject.
@@ -288,7 +338,7 @@ class EtudeFiches(object):
             for p in self._l_new_year:
                 print(p._name_project)
 
-        l_continu, l_close_p, l_new_proj = self._merge_2_years()
+        l_continu, l_close_p, l_new_proj = self._merge_database_file()
 
         return l_continu, l_close_p, l_new_proj
 
@@ -354,6 +404,55 @@ class EtudeFiches(object):
             proj._status = proj._status + l_add
 
         return l_stop_proj
+
+    def _merge_database_file(self):
+
+        l_close_p = []
+        l_new_proj = []
+        l_continu = []
+
+        T_match = 0.8
+
+        # find close project of n-1
+        t_l_proj = self._list_project
+        t_l_f_al = self._l_proj_file_albert
+        l_close_p, l_continu = self._extract_from_match(t_l_proj,
+                                                        t_l_f_al,
+                                                        T_match)
+        l_new_proj, _ = self._extract_from_match(t_l_f_al,
+                                                 t_l_proj,
+                                                 T_match)
+
+        for p in self._list_project:
+            print(len(p._nb_heures))
+        # Nb Tri in database
+        nb_tri_db = len(self._list_project[0]._nb_heures)
+        # Nb Tri in Albert's file
+        nb_tri_f_al = len(self._l_proj_file_albert[0]._nb_heures)
+        # add -1 for closed project for new trimester coming from Albert's file
+        l_close_p = self._add_empty_field_stopped_project(l_close_p,
+                                                          nb_tri_f_al)
+        # add 0 for status et hour in previous T
+        l_new_proj = self._add_empty_field_new_project(l_new_proj, nb_tri_db)
+
+        if(self._Debug is True):
+            print("Number project without next in 2017", len(l_close_p),)
+            for proj in l_close_p:
+                print(proj._name_project)
+                print(proj._nb_heures)
+                print(proj._status)
+            print("Number of new project in 2017", len(l_new_proj),)
+            for proj in l_new_proj:
+                print(proj._name_project)
+                print(proj._nb_heures)
+                print(proj._status)
+            print("Number project which contiue for 2017", len(l_continu))
+            for proj in l_continu:
+                print(proj._name_project)
+                print(proj._nb_heures)
+                print(proj._status)
+
+        return l_continu, l_close_p, l_new_proj
 
     def _merge_2_years(self):
 
@@ -488,7 +587,7 @@ class EtudeFiches(object):
                 # merge n_t
                 # TODO: vérifier pourquoi on utilise l2p et non l2
                 l_h = l1[i]._nb_heures + l2p[l_indx_maxi[i]]._nb_heures
-                l_s = l1[i]._status + [0, 0, 0, 0]
+                l_s = l1[i]._status + l2p[l_indx_maxi[i]]._status
                 l_match_up.append(Project(l2[l_indx_maxi[i]]._name_project,
                                           l_h, l_s))
                 if(self._Debug):
@@ -746,8 +845,62 @@ class EtudeFiches(object):
                             print(self._list_project[idx_l]._status[3])
                             break
 
+    def export_l_csv_with_header(self, name, l):
+        """ export a list of project in CSV format and with header in order to
+        have compatibility with pandas
+
+        args
+        ----
+            name : string
+                   filename
+            l : list of project object
+                list of project to export
+        """
+        with open(name, 'w') as fl:
+            print('Number of project to export : ' + str(len(l)))
+            str_T = ''
+            str_H = ''
+            for i in range(len(l[0]._status)):
+                str_tmp = 'T' + str(i + 1) + ','
+                str_T += str_tmp
+                str_tmp = 'H' + str(i + 1) + ','
+                str_H += str_tmp
+
+            a_ecrire = 'nom_projet,nom_fiche,' + str_T + str_H
+            fl.write(a_ecrire + '\n')
+
+            for idx, item in enumerate(l):
+                a_ecrire = l[idx]._name_project + ","
+                if len(l[idx]._l_fiches) != 0:
+                    a_ecrire = a_ecrire + l[idx]._l_fiches[0] + ","
+                else:
+                    a_ecrire = a_ecrire + " " + ","
+                if len(l[idx]._status) != 0:
+                    for idx_s, item_s in enumerate(l[idx]._status):
+                        a_ecrire = a_ecrire + str(l[idx]._status[idx_s]) + ","
+                else:
+                    raise ValueError("")
+                if len(l[idx]._nb_heures) != 0:
+                    for idx_s, item_s in enumerate(l[idx]._nb_heures):
+                        a_ecrire = a_ecrire + str(l[idx]._nb_heures[idx_s]) \
+                            + ","
+                else:
+                    raise ValueError("Empty list of Hours")
+                fl.write(a_ecrire + '\n')
+                a_ecrire = ''
+            fl.close()
+
     def export_l_csv(self, name, l):
-        # TODO : Export header for CSV format when you open with pandas
+        """ export list of project in csv file with out header -> not compatible
+        with pandas
+
+        args
+        ----
+            name : string
+                   filename
+            l : list of project object
+                list to export
+        """
         with open(name, 'w') as fl:
             print("nombre projet export : " + str(len(l)))
             for idx, item in enumerate(l):
@@ -776,6 +929,16 @@ class EtudeFiches(object):
             fl.close()
 
     def export_l_html(self, name, l):
+        """Export a list of project in HTML
+
+        args
+        ----
+
+            name : string
+                   output filename
+            l : list of project object
+                list of project to export in HTML
+        """
         with open(name, 'wb') as fl:
             print("nombre projet export : " + str(len(l)))
             fl.write("<!DOCTYPE html>")
@@ -821,7 +984,7 @@ class EtudeFiches(object):
                     + "<th>0</th>" + "<th>0</th>" + "<th>0</th>"
                 # print a_ecrire
                 # print str(idx)
-                fl.write("%s\n" % a_ecrire)
+                fl.write(a_ecrire)
                 fl.write("</tr>")
                 a_ecrire = ''
             fl.write("</tr>")
@@ -844,6 +1007,8 @@ class EtudeFiches(object):
             return "#0000FF"
         elif(status == 7):
             return "#7f00FF"
+        elif(status == 10):
+            return "#FF3399"
         elif (status == -1):
             return "#007FA0"
         else:
