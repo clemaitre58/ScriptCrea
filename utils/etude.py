@@ -1,11 +1,12 @@
 # import csv
-from copy import deepcopy
 import os
 import xlrd
+import pandas as pd
 import subprocess
+from copy import deepcopy
 from utils.project import Project
 from utils.str import similarity
-import pandas as pd
+from utils.tri_h_name import TriHName
 
 
 class EtudeFiches(object):
@@ -21,9 +22,18 @@ class EtudeFiches(object):
         the existing database that you give in arguments on the constructor.
 
     """
-    def __init__(self, dir_proj, existing_out_file=None):
-        # TODO: give attribut TMax as argument and place it in attribut of the
-        # class
+    def __init__(self, dir_proj, Tmax, existing_out_file=None):
+        """Inits class EtudeFiches
+
+        Args :
+            dir_proj : string
+                       working directory wich contain data and results
+            Tmax : integer
+                   number of last Trimester in the database
+            existing_out_file : string
+                                path of an existing  database
+                                default value : None
+        """
         self._list_project = []
         self._list_project_csv = []
         self._list_project_xlsx = []
@@ -39,6 +49,7 @@ class EtudeFiches(object):
         self._liste_fiche_full = []
         self._l_new_year = []
         self._Debug = True
+        self._Tmax = Tmax
         if (self._existing_out_file is None):
             self._existing_out_file = self._dir_proj + '/Suivi/suivi.csv'
             self._create_empty_ofile(self._existing_out_file)
@@ -179,55 +190,38 @@ class EtudeFiches(object):
 
     def show_all_project_data(self):
         for idx, item in enumerate(self._list_project):
-            s_projet = "Nom du projet : "
+            s_projet = 'Nom du projet : '
             + self._list_project[idx]._name_project
-            s_fiche = " Nom fiches : "
+            s_fiche = ' Nom fiches : '
             for idx_l, item_l in enumerate(self._list_project[idx].l_fiches):
                 s_fiche = s_fiche + self._list_project[idx].l_fiches[idx_l]
             print(s_projet + s_fiche)
 
+    def _generate_tri_name(self):
+        l_tri_name = []
+
+        for i in range(self._Tmax):
+            l_tri_name.append(TriHName('T' + str(i + 1), 'H' + str(i + 1)))
+
+        return l_tri_name
+
     def _import_existing_suivi(self):
-        # TODO: import using the number of Tmax attribut
         df = pd.read_csv(self._existing_out_file)
         l_name_project = []
         l_fiches = []
-        l_s_t1 = []
-        l_s_t2 = []
-        l_s_t3 = []
-        l_s_t4 = []
-        l_n_t1 = []
-        l_n_t2 = []
-        l_n_t3 = []
-        l_n_t4 = []
-        l_name_project = df['n_fiche'].values
-        l_fiches = df['p_fiche'].values
-        l_s_t1 = df['s_t1'].values
-        l_s_t2 = df['s_t2'].values
-        l_s_t3 = df['s_t3'].values
-        l_s_t4 = df['s_t4'].values
-        l_n_t1 = df['n_t1'].values
-        l_n_t2 = df['n_t2'].values
-        l_n_t3 = df['n_t3'].values
-        l_n_t4 = df['n_t4'].values
+        s_t = []
+        n_t = []
+        l_tri_name = self._generate_tri_name()
+        l_name_project = df['nom_projet'].values
+        l_fiches = df['nom_fiche'].values
+
+        for s in l_tri_name:
+            s_t.append(df[s._tri_name])
+            n_t.append(df[s._h_name])
 
         for i in range(len(l_name_project)):
-            n_fiche = l_name_project[i]
-            p_fiche = l_fiches[i]
-            s_t1 = l_s_t1[i]
-            s_t2 = l_s_t2[i]
-            s_t3 = l_s_t3[i]
-            s_t4 = l_s_t4[i]
-            n_t1 = l_n_t1[i]
-            n_t2 = l_n_t2[i]
-            n_t3 = l_n_t3[i]
-            n_t4 = l_n_t4[i]
-
-            s_t = [s_t1, s_t2, s_t3, s_t4]
-            n_t = [n_t1, n_t2, n_t3, n_t4]
-
-            t_project = Project(n_fiche, n_t, s_t, None)
-            t_project.l_fiches = p_fiche
-
+            t_project = Project(l_name_project[i], n_t[i], s_t[i], None)
+            t_project.l_fiches = l_fiches[i]
             self._list_project.append(t_project)
 
         if(self._Debug):
@@ -753,6 +747,7 @@ class EtudeFiches(object):
                             break
 
     def export_l_csv(self, name, l):
+        # TODO : Export header for CSV format when you open with pandas
         with open(name, 'w') as fl:
             print("nombre projet export : " + str(len(l)))
             for idx, item in enumerate(l):
@@ -767,7 +762,6 @@ class EtudeFiches(object):
                 else:
                     a_ecrire = a_ecrire + " " + "," + " " + "," + " " + ","
                     + " " + ","
-                # fl.write("%s\n" % a_ecrire)
                 if len(l[idx]._nb_heures) != 0:
                     for idx_s, item_s in enumerate(l[idx]._nb_heures):
                         a_ecrire = a_ecrire + str(l[idx]._nb_heures[idx_s]) \
