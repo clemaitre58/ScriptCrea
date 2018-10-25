@@ -1,6 +1,6 @@
 from utils.etude import EtudeFiches
 
-EtudeCrea2017 = EtudeFiches('/home/cedric/Documents/Conseil/Creative',
+EtudeCrea2017 = EtudeFiches('/home/cedric/Documents/Conseil/Creative', 4,
                             '/Suivi/suivi_fiche_2016.csv')
 
 p_data_2017 = '/home/cedric/Documents/Conseil/Creative/Suivi/Data_2017.csv'
@@ -21,12 +21,14 @@ for p in l_update:
 print('Export 2016-2017 in csv :')
 f_suivi_fiche_2016_csv = \
     '/home/cedric/Documents/Conseil/Creative/Suivi/suivi_fiche_201617_temp.csv'
-EtudeCrea2017.export_l_csv(f_suivi_fiche_2016_csv, l_update)
+EtudeCrea2017.export_l_csv_with_header(f_suivi_fiche_2016_csv, l_update)
+print('Export CSV done!')
 
 print('Export 2016-2017 in html :')
 f_suivi_fiche_2016_html = \
     '/home/cedric/Documents/Conseil/Creative/Suivi/suivi_fiche_201617_tmp.html'
-EtudeCrea2017.export_l_csv(f_suivi_fiche_2016_csv, l_update)
+EtudeCrea2017.export_l_html(f_suivi_fiche_2016_html, l_update)
+print('Export html done!')
 
 # EtudeCrea2016._create_new_trimester('T4', '2016')
 # # EtudeCrea2016.print_all_tri_fiches()

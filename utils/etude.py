@@ -51,6 +51,8 @@ class EtudeFiches(object):
         self._l_proj_file_albert = []
         self._Debug = True
         self._Tmax = Tmax
+
+        # import ipdb; ipdb.set_trace()
         if (self._existing_out_file is None):
             self._existing_out_file = self._dir_proj + '/Suivi/suivi.csv'
             self._create_empty_ofile(self._existing_out_file)
@@ -221,11 +223,15 @@ class EtudeFiches(object):
             n_t.append(df[s._h_name])
 
         for i in range(len(l_name_project)):
-            t_project = Project(l_name_project[i], n_t[i], s_t[i], None)
+            l_H = []
+            l_T = []
+            for j in range(len(n_t)):
+                l_H.append(n_t[j][i])
+                l_T.append(s_t[j][i])
+            t_project = Project(l_name_project[i], l_T, l_H, None)
             t_project.l_fiches = l_fiches[i]
             self._list_project.append(t_project)
 
-        if(self._Debug):
             print("conteru de la liste année précédente")
             for p in self._list_project:
                 print(p._name_project)
@@ -334,11 +340,11 @@ class EtudeFiches(object):
             self._l_new_year.append(t_project)
 
         if(self._Debug):
-            print("conteru de la liste de la nouvelle année")
+            print("contenu de la liste de la nouvelle année")
             for p in self._l_new_year:
                 print(p._name_project)
 
-        l_continu, l_close_p, l_new_proj = self._merge_database_file()
+        l_continu, l_close_p, l_new_proj = self._merge_2_years()
 
         return l_continu, l_close_p, l_new_proj
 
@@ -939,8 +945,9 @@ class EtudeFiches(object):
             l : list of project object
                 list of project to export in HTML
         """
-        with open(name, 'wb') as fl:
-            print("nombre projet export : " + str(len(l)))
+        # TODO 1: voir ce qu'on fait lorsqu'il y a des nan pour les couleurs
+        # TODO 2: corrigé si le champ nom de la fiche est vide
+        with open(name, 'w') as fl:
             fl.write("<!DOCTYPE html>")
             fl.write("<html>")
             fl.write("<head>")
@@ -956,12 +963,12 @@ class EtudeFiches(object):
                 else:
                     a_ecrire = "<th>Pas de nom de projet</th>"
                 if len(l[idx]._l_fiches) != 0:
-                    a_ecrire = a_ecrire + "<th>" + "<a href = '"
-                    + l[idx]._l_fiches[0].replace(
-                        "/home/cedric/Documents/Conseil/Creative", "..")
-                    + "'>" + l[idx]._l_fiches[0].replace(
-                        "/home/cedric/Documents/Conseil/Creative", "..")
-                    + "</a>" + "</th>"
+                    a_ecrire = a_ecrire + "<th>" + "<a href = '" \
+                        + l[idx]._l_fiches[0].replace(
+                            "/home/cedric/Documents/Conseil/Creative", "..")\
+                        + "'>" + l[idx]._l_fiches[0].replace(
+                            "/home/cedric/Documents/Conseil/Creative", "..")\
+                        + "</a>" + "</th>"
                 else:
                     a_ecrire + a_ecrire + "<th>Pas de fichier dispo</th>"
                 if (len(l[idx]._status) != 0 and len(l[idx]._nb_heures) != 0):
@@ -970,12 +977,12 @@ class EtudeFiches(object):
                         status = l[idx]._status[idx_s]
                         s_bg = self._status_to_color(status)
                         if(idx_s < len(l[idx]._nb_heures)):
-                            a_ecrire = a_ecrire + "<td bgcolor=" + s_bg + ">"
-                            + str(l[idx]._nb_heures[idx_s]) + "</td>"
+                            a_ecrire = a_ecrire + "<td bgcolor=" + s_bg + ">" \
+                                + str(l[idx]._nb_heures[idx_s]) + "</td>"
                             cumul = cumul + l[idx]._nb_heures[idx_s]
                         else:
-                            a_ecrire = a_ecrire + "<td bgcolor=" + s_bg + ">"
-                            + str(-1) + "</td>"
+                            a_ecrire = a_ecrire + "<td bgcolor=" + s_bg + ">" \
+                                + str(-1) + "</td>"
                     a_ecrire += "<th>" + str(cumul) + "</th>"
                     cumul = 0
 
